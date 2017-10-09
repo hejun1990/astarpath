@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A*寻路算法</title>
+
+    <link href="css/astar_search.css" rel="stylesheet"/>
+    <script src="js/jquery-3.2.0.min.js"></script>
+</head>
+<body>
+<div class="top_container">
+    设置 : <input type="radio" name="pointType" value="1" checked>起点
+    <input type="radio" name="pointType" value="2">终点
+    <input type="radio" name="pointType" value="3">障碍物&nbsp;&nbsp;&nbsp;
+    <input type="button" value="清除障碍物" onclick="clearHinders()">&nbsp;&nbsp;&nbsp;
+    <input type="button" value="开始运算" onclick="starSearch()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    X : <span id="x_coordinate">0</span>, Y : <span id="y_coordinate">0</span>,
+    F : <span id="f_value">0</span>, G : <span id="g_value">0</span>, H : <span id="h_value">0</span>
+</div>
+<div id="path_map" class="center_container">
+</div>
+</body>
+
+<script>
+    $(function () {
+        initMapBlock();
+    });
+
+    // 方块对象集合
+    var pointArray = new Array();
+
+    // 创建一个10*10的方格图
+    function initMapBlock() {
+        var blockHtml = "";
+        for (var x = 1; x <= 100; x++) {
+            blockHtml += "<div id=\"point_" + x + "\" class=\"point\" index=\"" + x
+                + "\" onclick=\"clickPoint(this)\" onmouseover=\"onPoint(this)\"></div>";
+
+            // X坐标
+            var x_coordinate = (x % 10 != 0) ? (x % 10) : 10;
+            // Y坐标
+            var y_coordinate = (x % 10 != 0) ? Math.ceil(x / 10) : (x / 10);
+            // 方块对象
+            var point = {
+                index: x,
+                x: x_coordinate,
+                y: y_coordinate,
+                f: 0, // f = g + h
+                g: 0, // 表示从起点 A 移动到网格上指定方格的移动耗费
+                h: 0, // 表示从指定的方格移动到终点 B 的预计耗费
+                is_hinder: 0, // 是否是障碍(0:否,1:是)
+                is_begin: 0, // 是否是起点(0:否,1:是)
+                is_end: 0 // 是否是终点(0:否,1:是)
+            };
+            pointArray.push(point);
+        }
+        $("#path_map").html(blockHtml);
+    }
+
+    // 清除障碍物
+    function clearHinders() {
+        for (var x = 0; x < pointArray.length; x++) {
+            var p = pointArray[x];
+            if (p.is_hinder == 1) {
+                p.is_hinder = 0;
+                $("div[index='" + p.index + "']").removeClass("hinder");
+            }
+        }
+    }
+
+    function clickPoint(point) {
+        var cur_point = $(point);
+        var index = cur_point.attr("index");
+        var pointType = $("input[type='radio'][name='pointType']:checked").val();
+        if (pointType == 1) { // 起点
+            // 如果已经有起点，去掉之前的起点
+            for (var x = 0; x < pointArray.length; x++) {
+                var p = pointArray[x];
+                if (p.is_begin == 1) {
+                    p.is_begin = 0;
+                    $("div[index='" + p.index + "']").removeClass("begin");
+                    break;
+                }
+            }
+            // 将当前选择的方块设置为起点
+            for (var x = 0; x < pointArray.length; x++) {
+                var p = pointArray[x];
+                if (p.index == index) {
+                    p.is_begin = 1;
+                    p.is_hinder = 0;
+                    p.is_end = 0;
+                    cur_point.removeClass("hinder").removeClass("end").addClass("begin");
+                    break;
+                }
+            }
+        } else if (pointType == 2) { // 终点
+            // 如果已经有终点，去掉之前的终点
+            for (var x = 0; x < pointArray.length; x++) {
+                var p = pointArray[x];
+                if (p.is_end == 1) {
+                    p.is_end = 0;
+                    $("div[index='" + p.index + "']").removeClass("end");
+                    break;
+                }
+            }
+            // 将当前选择的方块设置为终点
+            for (var x = 0; x < pointArray.length; x++) {
+                var p = pointArray[x];
+                if (p.index == index) {
+                    p.is_begin = 0;
+                    p.is_hinder = 0;
+                    p.is_end = 1;
+                    cur_point.removeClass("hinder").removeClass("begin").addClass("end");
+                    break;
+                }
+            }
+        } else if(pointType == 3) { // 障碍物
+            // 将当前选择的方块设置为障碍物
+            for (var x = 0; x < pointArray.length; x++) {
+                var p = pointArray[x];
+                if (p.index == index) {
+                    p.is_begin = 0;
+                    p.is_hinder = 1;
+                    p.is_end = 0;
+                    cur_point.removeClass("begin").removeClass("end").addClass("hinder");
+                    break;
+                }
+            }
+        }
+    }
+
+    // 显示方块的业务属性
+    function showPointAttr(point) {
+        $("#x_coordinate").text(point.x);
+        $("#y_coordinate").text(point.y);
+        $("#f_value").text(point.f);
+        $("#g_value").text(point.g);
+        $("#h_value").text(point.h);
+    }
+
+    // 鼠标移入方块
+    function onPoint(point) {
+        var cur_point = $(point);
+        var index = cur_point.attr("index");
+        for (var x = 0; x < pointArray.length; x++) {
+            var p = pointArray[x];
+            if (p.index == index) {
+                showPointAttr(p);
+                break;
+            }
+        }
+    }
+
+    // A*寻路计算
+    function starSearch() {
+        if(!checkSearch()) {
+            return;
+        }
+        alert("开始计算");
+    }
+
+    // 检查是否可以开始寻路计算
+    function checkSearch() {
+        var has_begin = false;
+        var has_end = false;
+        var has_hinder = false;
+        for (var x = 0; x < pointArray.length; x++) {
+            if(has_begin && has_end && has_hinder) {
+                break;
+            }
+            var p = pointArray[x];
+            if (p.is_begin == 1) {
+                has_begin = true;
+            }
+            if(p.is_end == 1) {
+                has_end = true;
+            }
+            if(p.is_hinder == 1) {
+                has_hinder = true;
+            }
+        }
+        if(!has_begin) {
+            alert("请设置起点");
+        }
+        if(!has_end) {
+            alert("请设置终点");
+        }
+        if(!has_hinder) {
+            alert("请设置障碍物");
+        }
+        return has_begin && has_end && has_hinder;
+    }
+</script>
+</html>
