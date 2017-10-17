@@ -30,6 +30,18 @@
     // 方块对象集合
     var pointArray = new Array();
 
+    // 起点
+    var begin_point = null;
+
+    // 终点
+    var end_point = null;
+
+    // 当前F值最低方块
+    var current_lowest_f_point = null;
+
+    // 障碍物列表
+    var hinderList = new Array();
+
     // 开启列表（待检查的方块列表）
     var openList = new Array();
 
@@ -41,7 +53,7 @@
         var blockHtml = "";
         for (var x = 1; x <= 100; x++) {
             blockHtml += "<div id=\"point_" + x + "\" class=\"point\" index=\"" + x
-                    + "\" onclick=\"clickPoint(this)\" onmouseover=\"onPoint(this)\"></div>";
+                    + "\" onclick=\"clickPoint(this)\" onmouseover=\"overPoint(this)\"></div>";
 
             // X坐标
             var x_coordinate = (x % 10 != 0) ? (x % 10) : 10;
@@ -67,15 +79,15 @@
 
     // 清除障碍物
     function clearHinders() {
-        for (var x = 0; x < pointArray.length; x++) {
-            var p = pointArray[x];
-            if (p.is_hinder == 1) {
-                p.is_hinder = 0;
-                $("div[index='" + p.index + "']").removeClass("hinder");
-            }
+        for (var x = 0; x < hinderList.length; x++) {
+            var p = hinderList[x];
+            p.is_hinder = 0;
+            $("div[index='" + p.index + "']").removeClass("hinder");
         }
+        hinderList.splice(0, hinderList.length);
     }
 
+    // 设置起点、终点和障碍物
     function clickPoint(point) {
         var cur_point = $(point);
         var index = cur_point.attr("index");
@@ -98,6 +110,7 @@
                     p.is_hinder = 0;
                     p.is_end = 0;
                     cur_point.removeClass("hinder").removeClass("end").addClass("begin");
+                    begin_point = p;
                     break;
                 }
             }
@@ -119,6 +132,7 @@
                     p.is_hinder = 0;
                     p.is_end = 1;
                     cur_point.removeClass("hinder").removeClass("begin").addClass("end");
+                    end_point = p;
                     break;
                 }
             }
@@ -131,32 +145,45 @@
                     p.is_hinder = 1;
                     p.is_end = 0;
                     cur_point.removeClass("begin").removeClass("end").addClass("hinder");
+                    hinderList.push(p);
                     break;
                 }
             }
         }
     }
 
-    // 显示方块的业务属性
-    function showPointAttr(point) {
-        $("#x_coordinate").text(point.x);
-        $("#y_coordinate").text(point.y);
-        $("#f_value").text(point.f);
-        $("#g_value").text(point.g);
-        $("#h_value").text(point.h);
-    }
-
     // 鼠标移入方块
-    function onPoint(point) {
+    function overPoint(point) {
         var cur_point = $(point);
         var index = cur_point.attr("index");
         for (var x = 0; x < pointArray.length; x++) {
             var p = pointArray[x];
             if (p.index == index) {
-                showPointAttr(p);
+                $("#x_coordinate").text(p.x);
+                $("#y_coordinate").text(p.y);
+                $("#f_value").text(p.f);
+                $("#g_value").text(p.g);
+                $("#h_value").text(p.h);
                 break;
             }
         }
+    }
+
+    // 检查是否可以开始寻路计算
+    function checkSearch() {
+        if (begin_point == null) {
+            alert("请设置起点");
+            return false;
+        }
+        if (end_point == null) {
+            alert("请设置终点");
+            return false;
+        }
+        if (hinderList.length == 0) {
+            alert("请设置障碍物");
+            return false;
+        }
+        return true;
     }
 
     // A*寻路计算
@@ -165,38 +192,26 @@
             return;
         }
         alert("开始计算");
+
+        // 将起点放入开启列表
+        openList.push(begin_point);
+        coreCalculate();
     }
 
-    // 检查是否可以开始寻路计算
-    function checkSearch() {
-        var has_begin = false;
-        var has_end = false;
-        var has_hinder = false;
-        for (var x = 0; x < pointArray.length; x++) {
-            if (has_begin && has_end && has_hinder) {
-                break;
-            }
-            var p = pointArray[x];
-            if (p.is_begin == 1) {
-                has_begin = true;
-            }
-            if (p.is_end == 1) {
-                has_end = true;
-            }
-            if (p.is_hinder == 1) {
-                has_hinder = true;
+    // 寻找当前开启列表中找到F值最低的方格，暂记为C。
+    // 将C从“开启列表”中删除，放入“关闭列表”。
+    // 查找C所有相邻并且可以到达 (障碍物和“关闭列表”的方格都不考虑) 的方格，
+    // 对于每一个可到达的方格，如果还不在“开启列表”里，将它加入 "开启列表"，计算其G，H和F值，并设置它的“父方格”为C。
+    // 如果已经在“开启列表”里，计算新的G值(经过C到达它的路径)，如果新的G值比原G值小，就把它的 "父方格" 改为C，再重新计算它的F值和G值
+    function coreCalculate() {
+        var lowest_f_value = -1;
+        var lowest_f_value_index = 0;
+        for(var x in openList) {
+            var p = openList[x];
+            if(lowest_f_value == -1) {
+                lowest_f_value = p.f;
             }
         }
-        if (!has_begin) {
-            alert("请设置起点");
-        }
-        if (!has_end) {
-            alert("请设置终点");
-        }
-        if (!has_hinder) {
-            alert("请设置障碍物");
-        }
-        return has_begin && has_end && has_hinder;
     }
 </script>
 </html>
