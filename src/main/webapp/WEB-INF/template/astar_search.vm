@@ -36,9 +36,6 @@
     // 终点
     var end_point = null;
 
-    // 当前F值最低方块
-    var current_lowest_f_point = null;
-
     // 障碍物列表
     var hinderList = new Array();
 
@@ -195,7 +192,12 @@
 
         // 将起点放入开启列表
         openList.push(begin_point);
-        coreCalculate();
+        var result = coreCalculate();
+        if(result == 0) {
+            alert("没有找到合适路径！");
+        } else if(result == 1) {
+            alert("找到路径！");
+        }
     }
 
     // 寻找当前开启列表中找到F值最低的方格，暂记为C。
@@ -204,14 +206,107 @@
     // 对于每一个可到达的方格，如果还不在“开启列表”里，将它加入 "开启列表"，计算其G，H和F值，并设置它的“父方格”为C。
     // 如果已经在“开启列表”里，计算新的G值(经过C到达它的路径)，如果新的G值比原G值小，就把它的 "父方格" 改为C，再重新计算它的F值和G值
     function coreCalculate() {
-        var lowest_f_value = -1;
-        var lowest_f_value_index = 0;
-        for(var x in openList) {
+        if(openList.length == 0) {
+            // 没有找到合适的路径
+            return 0;
+        }
+        // 检查“开启列表”中是否已经有“终点”了，如果有，寻径计算结束
+        var arrive_end = false;
+        for (var x in openList) {
             var p = openList[x];
-            if(lowest_f_value == -1) {
-                lowest_f_value = p.f;
+            if(p.index == end_point.index) {
+                // 已抵达终点
+                arrive_end = true;
+                break;
             }
         }
+        if(arrive_end) {
+            return 1;
+        }
+
+        var lowest_f_value = 0;
+        // 当前开启列表中F值最低的方格的下标
+        var lowest_f_value_index = 0;
+        for (var x in openList) {
+            var p = openList[x];
+            if (x == 0) {
+                lowest_f_value = p.f;
+            } else {
+                if (parseFloat(lowest_f_value) > parseFloat(p.f)) {
+                    lowest_f_value = p.f;
+                    lowest_f_value_index = x;
+                }
+            }
+        }
+        var current_lowest_f_point = openList[lowest_f_value_index];
+        // 将F值最低方格从“开启列表”中删除，放入“关闭列表”
+        openList.slice(lowest_f_value_index, 1);
+        closeList.push(current_lowest_f_point);
+
+        var canArriveList = new Array();
+        // 查找与当前F值最低方格相邻的方格，只查找上下左右四个方向
+        for (var x in pointArray) {
+            var p = pointArray[x];
+            var up_x = current_lowest_f_point.x;
+            var up_y = current_lowest_f_point.y - 1;
+            var right_x = current_lowest_f_point.x + 1;
+            var right_y = current_lowest_f_point.y;
+            var down_x = current_lowest_f_point.x;
+            var down_y = current_lowest_f_point.y + 1;
+            var left_x = current_lowest_f_point.x - 1;
+            var left_y = current_lowest_f_point.y;
+            if ((p.x == up_x && p.y == up_y)
+                    || (p.x == right_x && p.y == right_y)
+                    || (p.x == down_x && p.y == down_y)
+                    || (p.x == left_x && p.y == left_y)) {
+                // 理论上可抵达的方格，但不能是障碍物或在关闭列表中
+                if (p.is_hinder == 0) {
+                    var inClose = false;
+                    for (var y in closeList) {
+                        if (p.index == closeList[y].index) {
+                            inClose = true;
+                            break;
+                        }
+                    }
+                    if (!inClose) {
+                        canArriveList.push(p);
+                    }
+                }
+            }
+        }
+
+        for (var x in canArriveList) {
+            var p = canArriveList[x];
+            var inOpen = false; // 是否在“开启列表”中
+            for (var y in openList) {
+                if (p.index == openList[y].index) {
+                    inOpen = true;
+                    break;
+                }
+            }
+            if (inOpen) { // 在“开启列表”中
+                // 算新路径的G值
+                var new_g = current_lowest_f_point.g + 10;
+                if (parseInt(new_g) < parseInt(p.g)) {
+                    p.parent_point = current_lowest_f_point;
+                    p.g = new_g;
+                    var dx = Math.abs(p.x - end_point.x);
+                    var dy = Math.abs(p.y - end_point.y);
+                    p.h = Math.min(dx, dy) * 0.414 + Math.max(dx, dy);
+                    p.f = parseInt(p.g) + parseInt(p.h);
+                }
+            } else { // 不在“开启列表”中
+                p.parent_point = current_lowest_f_point;
+                p.g = current_lowest_f_point.g + 10;
+                var dx = Math.abs(p.x - end_point.x);
+                var dy = Math.abs(p.y - end_point.y);
+                p.h = Math.min(dx, dy) * 0.414 + Math.max(dx, dy);
+                p.f = parseInt(p.g) + parseInt(p.h);
+                openList.push(p);
+            }
+        }
+
+        return coreCalculate();
     }
 </script>
 </html>
