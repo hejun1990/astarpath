@@ -13,8 +13,9 @@
     设置 : <input type="radio" name="pointType" value="1" checked>起点
     <input type="radio" name="pointType" value="2">终点
     <input type="radio" name="pointType" value="3">障碍物&nbsp;&nbsp;&nbsp;
-    <input type="button" value="清除障碍物" onclick="clearHinders()">&nbsp;&nbsp;&nbsp;
-    <input type="button" value="开始运算" onclick="starSearch()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <input type="button" value="重置障碍" onclick="clearHinders()">&nbsp;&nbsp;&nbsp;
+    <input type="button" value="开始运算" onclick="starSearch()">&nbsp;&nbsp;&nbsp;
+    <input type="button" value="重新开始" onclick="reset()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     X : <span id="x_coordinate">0</span>, Y : <span id="y_coordinate">0</span>,
     F : <span id="f_value">0</span>, G : <span id="g_value">0</span>, H : <span id="h_value">0</span>
 </div>
@@ -22,10 +23,13 @@
 </div>
 </body>
 
-<script>
+<script type="text/javascript">
     $(function () {
         initMapBlock();
     });
+
+    // 是否开始寻径。0:未开始;1:已开始
+    var beginSearch = false;
 
     // 方块对象集合
     var pointArray = new Array();
@@ -38,6 +42,9 @@
 
     // 障碍物列表
     var hinderList = new Array();
+
+    // 路径列表
+    var pathList = new Array();
 
     // 开启列表（待检查的方块列表）
     var openList = new Array();
@@ -76,22 +83,43 @@
 
     // 清除障碍物
     function clearHinders() {
-        for (var x = 0; x < hinderList.length; x++) {
+        for (var x in hinderList) {
             var p = hinderList[x];
             p.is_hinder = 0;
             $("div[index='" + p.index + "']").removeClass("hinder");
         }
         hinderList.splice(0, hinderList.length);
+        clearPath();
+        beginSearch = false;
+        $(":radio[name='pointType'][value='3']").prop("checked", "checked");
+    }
+
+    // 清除路径
+    function clearPath() {
+        for (var x in pathList) {
+            var p = pathList[x];
+            p.parent_point = null;
+            $("div[index='" + p.index + "']").removeClass("path");
+        }
+        pathList.splice(0, pathList.length);
+        openList.splice(0, openList.length);
+        closeList.splice(0, closeList.length);
+        if (end_point != null) {
+            end_point.parent_point = null;
+        }
     }
 
     // 设置起点、终点和障碍物
     function clickPoint(point) {
+        if (beginSearch) {
+            return;
+        }
         var cur_point = $(point);
         var index = cur_point.attr("index");
         var pointType = $("input[type='radio'][name='pointType']:checked").val();
         if (pointType == 1) { // 起点
             // 如果已经有起点，去掉之前的起点
-            for (var x = 0; x < pointArray.length; x++) {
+            for (var x in pointArray) {
                 var p = pointArray[x];
                 if (p.is_begin == 1) {
                     p.is_begin = 0;
@@ -100,7 +128,7 @@
                 }
             }
             // 将当前选择的方块设置为起点
-            for (var x = 0; x < pointArray.length; x++) {
+            for (var x in pointArray) {
                 var p = pointArray[x];
                 if (p.index == index) {
                     p.is_begin = 1;
@@ -113,7 +141,7 @@
             }
         } else if (pointType == 2) { // 终点
             // 如果已经有终点，去掉之前的终点
-            for (var x = 0; x < pointArray.length; x++) {
+            for (var x in pointArray) {
                 var p = pointArray[x];
                 if (p.is_end == 1) {
                     p.is_end = 0;
@@ -122,7 +150,7 @@
                 }
             }
             // 将当前选择的方块设置为终点
-            for (var x = 0; x < pointArray.length; x++) {
+            for (var x in pointArray) {
                 var p = pointArray[x];
                 if (p.index == index) {
                     p.is_begin = 0;
@@ -135,7 +163,7 @@
             }
         } else if (pointType == 3) { // 障碍物
             // 将当前选择的方块设置为障碍物
-            for (var x = 0; x < pointArray.length; x++) {
+            for (var x in pointArray) {
                 var p = pointArray[x];
                 if (p.index == index) {
                     p.is_begin = 0;
@@ -153,7 +181,7 @@
     function overPoint(point) {
         var cur_point = $(point);
         var index = cur_point.attr("index");
-        for (var x = 0; x < pointArray.length; x++) {
+        for (var x in pointArray) {
             var p = pointArray[x];
             if (p.index == index) {
                 $("#x_coordinate").text(p.x);
@@ -188,15 +216,28 @@
         if (!checkSearch()) {
             return;
         }
-        alert("开始计算");
+        beginSearch = true;
+        // 清除路径
+        clearPath();
 
         // 将起点放入开启列表
         openList.push(begin_point);
         var result = coreCalculate();
-        if(result == 0) {
-            alert("没有找到合适路径！");
-        } else if(result == 1) {
-            alert("找到路径！");
+        if (result == 0) {
+            alert("无法找到可抵达的路径！");
+        } else if (result == 1) {
+            if (end_point.parent_point == null) {
+                alert("寻径异常！");
+                return;
+            }
+            getEndPath();
+            for (var x in pathList) {
+                var p = pathList[x];
+                $("div[index='" + p.index + "']").removeClass("begin")
+                        .removeClass("end")
+                        .removeClass("hinder")
+                        .addClass("path");
+            }
         }
     }
 
@@ -206,7 +247,7 @@
     // 对于每一个可到达的方格，如果还不在“开启列表”里，将它加入 "开启列表"，计算其G，H和F值，并设置它的“父方格”为C。
     // 如果已经在“开启列表”里，计算新的G值(经过C到达它的路径)，如果新的G值比原G值小，就把它的 "父方格" 改为C，再重新计算它的F值和G值
     function coreCalculate() {
-        if(openList.length == 0) {
+        if (openList.length == 0) {
             // 没有找到合适的路径
             return 0;
         }
@@ -214,13 +255,13 @@
         var arrive_end = false;
         for (var x in openList) {
             var p = openList[x];
-            if(p.index == end_point.index) {
+            if (p.index == end_point.index) {
                 // 已抵达终点
                 arrive_end = true;
                 break;
             }
         }
-        if(arrive_end) {
+        if (arrive_end) {
             return 1;
         }
 
@@ -240,7 +281,7 @@
         }
         var current_lowest_f_point = openList[lowest_f_value_index];
         // 将F值最低方格从“开启列表”中删除，放入“关闭列表”
-        openList.slice(lowest_f_value_index, 1);
+        openList.splice(lowest_f_value_index, 1);
         closeList.push(current_lowest_f_point);
 
         var canArriveList = new Array();
@@ -293,7 +334,7 @@
                     var dx = Math.abs(p.x - end_point.x);
                     var dy = Math.abs(p.y - end_point.y);
                     p.h = Math.min(dx, dy) * 0.414 + Math.max(dx, dy);
-                    p.f = parseInt(p.g) + parseInt(p.h);
+                    p.f = parseFloat(p.g) + parseFloat(p.h);
                 }
             } else { // 不在“开启列表”中
                 p.parent_point = current_lowest_f_point;
@@ -301,12 +342,47 @@
                 var dx = Math.abs(p.x - end_point.x);
                 var dy = Math.abs(p.y - end_point.y);
                 p.h = Math.min(dx, dy) * 0.414 + Math.max(dx, dy);
-                p.f = parseInt(p.g) + parseInt(p.h);
+                p.f = parseFloat(p.g) + parseFloat(p.h);
                 openList.push(p);
             }
         }
 
         return coreCalculate();
+    }
+
+    // 获取路径方块
+    function getEndPath() {
+        var pathPoint = end_point.parent_point;
+        do {
+            pathList.push(pathPoint);
+            pathPoint = pathPoint.parent_point;
+        } while (pathPoint != null && pathPoint.is_begin != 1);
+    }
+
+    // 重新开始
+    function reset() {
+        beginSearch = false;
+        begin_point = null;
+        end_point = null;
+        hinderList.splice(0, hinderList.length);
+        pathList.splice(0, pathList.length);
+        openList.splice(0, openList.length);
+        closeList.splice(0, closeList.length);
+        for (var x in pointArray) {
+            var p = pointArray[x];
+            p.f = 0;
+            p.g = 0;
+            p.h = 0;
+            p.is_hinder = 0;
+            p.is_begin = 0;
+            p.is_end = 0;
+            p.parent_point = null;
+            $("div[index='" + p.index + "']").removeClass("begin")
+                    .removeClass("end")
+                    .removeClass("hinder")
+                    .removeClass("path");
+        }
+        $(":radio[name='pointType'][value='1']").prop("checked", "checked");
     }
 </script>
 </html>

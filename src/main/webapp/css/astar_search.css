@@ -36,3 +36,8 @@
 span {
     color: #0f76c2;
 }
+
+/* 路径 */
+.path {
+    background: orange;
+}
