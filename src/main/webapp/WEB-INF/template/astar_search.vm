@@ -10,12 +10,14 @@
 </head>
 <body>
 <div class="top_container">
-    设置 : <input type="radio" name="pointType" value="1" checked>起点
-    <input type="radio" name="pointType" value="2">终点
-    <input type="radio" name="pointType" value="3">障碍物&nbsp;&nbsp;&nbsp;
-    <input type="button" value="重置障碍" onclick="clearHinders()">&nbsp;&nbsp;&nbsp;
-    <input type="button" value="开始运算" onclick="starSearch()">&nbsp;&nbsp;&nbsp;
-    <input type="button" value="重新开始" onclick="reset()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    设置 :
+    <input type="radio" name="pointType" value="1" checked><span class="setPointType"
+                                                                 onclick="setPointType(1)">起点</span>
+    <input type="radio" name="pointType" value="2"><span class="setPointType" onclick="setPointType(2)">终点</span>
+    <input type="radio" name="pointType" value="3"><span class="setPointType2" onclick="setPointType(3)">障碍物</span>
+    <input type="button" class="setButton" value="重置障碍" onclick="clearHinders()">
+    <input type="button" class="setButton" value="开始运算" onclick="starSearch()">
+    <input type="button" class="setButton" value="重新开始" onclick="reset()">
     X : <span id="x_coordinate">0</span>, Y : <span id="y_coordinate">0</span>,
     F : <span id="f_value">0</span>, G : <span id="g_value">0</span>, H : <span id="h_value">0</span>
 </div>
@@ -237,6 +239,9 @@
                         .removeClass("end")
                         .removeClass("hinder")
                         .addClass("path");
+                $("div[index='" + p.index + "']").append("<span class='span_f'>" + p.f + "</span>");
+                $("div[index='" + p.index + "']").append("<span class='span_g'>" + p.g + "</span>");
+                $("div[index='" + p.index + "']").append("<span class='span_h'>" + p.h + "</span>");
             }
         }
     }
@@ -333,16 +338,16 @@
                     p.g = new_g;
                     var dx = Math.abs(p.x - end_point.x);
                     var dy = Math.abs(p.y - end_point.y);
-                    p.h = Math.min(dx, dy) * 0.414 + Math.max(dx, dy);
-                    p.f = parseFloat(p.g) + parseFloat(p.h);
+                    p.h = (Math.min(dx, dy) * 0.414 + Math.max(dx, dy)).toFixed(1);
+                    p.f = (parseFloat(p.g) + parseFloat(p.h)).toFixed(1);
                 }
             } else { // 不在“开启列表”中
                 p.parent_point = current_lowest_f_point;
                 p.g = current_lowest_f_point.g + 10;
                 var dx = Math.abs(p.x - end_point.x);
                 var dy = Math.abs(p.y - end_point.y);
-                p.h = Math.min(dx, dy) * 0.414 + Math.max(dx, dy);
-                p.f = parseFloat(p.g) + parseFloat(p.h);
+                p.h = (Math.min(dx, dy) * 0.414 + Math.max(dx, dy)).toFixed(1);
+                p.f = (parseFloat(p.g) + parseFloat(p.h)).toFixed(1);
                 openList.push(p);
             }
         }
@@ -383,6 +388,10 @@
                     .removeClass("path");
         }
         $(":radio[name='pointType'][value='1']").prop("checked", "checked");
+    }
+
+    function setPointType(value) {
+        $(":radio[name='pointType'][value='" + value + "']").prop("checked", "checked");
     }
 </script>
 </html>

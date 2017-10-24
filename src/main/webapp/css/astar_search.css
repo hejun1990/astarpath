@@ -41,3 +41,55 @@ span {
 .path {
     background: orange;
 }
+
+/* 设定方块类型 */
+.setPointType {
+    cursor: pointer;
+    margin: 0 10px 0 0px;
+}
+
+/* 设定方块类型 */
+.setPointType2 {
+    cursor: pointer;
+    margin: 0 30px 0 0px;
+}
+
+.setButton {
+    margin: 0 30px 0 0px;
+}
+
+.span_f {
+    position: relative;
+    text-align: left;
+    display: block;
+    width: 25px;
+    height: auto;
+    top: 3px;
+    left: 3px;
+    font-size: 12px;
+    color: azure;
+}
+
+.span_g {
+     position: relative;
+     text-align: left;
+     display: block;
+     width: 25px;
+     height: auto;
+     top: 37px;
+     left: 3px;
+     font-size: 12px;
+     color: azure;
+ }
+
+.span_h {
+    position: relative;
+    text-align: right;
+    display: block;
+    width: 25px;
+    height: auto;
+    top: 23px;
+    left: 38px;
+    font-size: 12px;
+    color: azure;
+}
