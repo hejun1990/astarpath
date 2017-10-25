@@ -94,3 +94,21 @@ span {
     font-size: 12px;
     color: azure;
 }
+
+.endPointText {
+    position: absolute;
+    display: block;
+    top: 14.2px;
+    left: 19px;
+    font-size: 30px;
+    font-weight: bold;
+    color: azure;
+}
+
+.onceOpen {
+    border: 1px solid green;
+}
+
+.onceOpenSpan {
+    color: #2e7d32;
+}

@@ -92,6 +92,7 @@
         }
         hinderList.splice(0, hinderList.length);
         clearPath();
+        clearOldOpenList();
         beginSearch = false;
         $(":radio[name='pointType'][value='3']").prop("checked", "checked");
     }
@@ -102,12 +103,29 @@
             var p = pathList[x];
             p.parent_point = null;
             $("div[index='" + p.index + "']").removeClass("path");
+            $("div[index='" + p.index + "']").empty();
         }
         pathList.splice(0, pathList.length);
         openList.splice(0, openList.length);
         closeList.splice(0, closeList.length);
         if (end_point != null) {
             end_point.parent_point = null;
+        }
+    }
+
+    // 清除历史开放列表展示
+    function clearOldOpenList() {
+        for (var x in pointArray) {
+            var p = pointArray[x];
+            var onceOpen = p.is_begin == 0 && p.is_end == 0 && p.parent_point != null && !checkPath(p)
+            if (onceOpen) {
+                p.f = 0;
+                p.g = 0;
+                p.h = 0;
+                p.parent_point = null;
+                $("div[index='" + p.index + "']").removeClass("onceOpen");
+                $("div[index='" + p.index + "']").empty();
+            }
         }
     }
 
@@ -126,6 +144,7 @@
                 if (p.is_begin == 1) {
                     p.is_begin = 0;
                     $("div[index='" + p.index + "']").removeClass("begin");
+                    $("div[index='" + p.index + "']").empty();
                     break;
                 }
             }
@@ -137,6 +156,7 @@
                     p.is_hinder = 0;
                     p.is_end = 0;
                     cur_point.removeClass("hinder").removeClass("end").addClass("begin");
+                    cur_point.append("<span class='endPointText'>起</span>");
                     begin_point = p;
                     break;
                 }
@@ -148,6 +168,7 @@
                 if (p.is_end == 1) {
                     p.is_end = 0;
                     $("div[index='" + p.index + "']").removeClass("end");
+                    $("div[index='" + p.index + "']").empty();
                     break;
                 }
             }
@@ -159,6 +180,7 @@
                     p.is_hinder = 0;
                     p.is_end = 1;
                     cur_point.removeClass("hinder").removeClass("begin").addClass("end");
+                    cur_point.append("<span class='endPointText'>终</span>");
                     end_point = p;
                     break;
                 }
@@ -221,6 +243,8 @@
         beginSearch = true;
         // 清除路径
         clearPath();
+        // 清除历史开放列表展示
+        clearOldOpenList();
 
         // 将起点放入开启列表
         openList.push(begin_point);
@@ -242,6 +266,18 @@
                 $("div[index='" + p.index + "']").append("<span class='span_f'>" + p.f + "</span>");
                 $("div[index='" + p.index + "']").append("<span class='span_g'>" + p.g + "</span>");
                 $("div[index='" + p.index + "']").append("<span class='span_h'>" + p.h + "</span>");
+            }
+
+            // 展示曾进入开放列表的方块
+            for (var x in pointArray) {
+                var p = pointArray[x];
+                var onceOpen = p.is_begin == 0 && p.is_end == 0 && p.parent_point != null && !checkPath(p)
+                if (onceOpen) {
+                    $("div[index='" + p.index + "']").addClass("onceOpen");
+                    $("div[index='" + p.index + "']").append("<span class='span_f onceOpenSpan'>" + p.f + "</span>");
+                    $("div[index='" + p.index + "']").append("<span class='span_g onceOpenSpan'>" + p.g + "</span>");
+                    $("div[index='" + p.index + "']").append("<span class='span_h onceOpenSpan'>" + p.h + "</span>");
+                }
             }
         }
     }
@@ -385,13 +421,28 @@
             $("div[index='" + p.index + "']").removeClass("begin")
                     .removeClass("end")
                     .removeClass("hinder")
-                    .removeClass("path");
+                    .removeClass("path")
+                    .removeClass("onceOpen");
+            $("div[index='" + p.index + "']").empty();
         }
         $(":radio[name='pointType'][value='1']").prop("checked", "checked");
     }
 
     function setPointType(value) {
         $(":radio[name='pointType'][value='" + value + "']").prop("checked", "checked");
+    }
+
+    // 检查方块是否是路径
+    function checkPath(point) {
+        var isPath = false;
+        for (var x in pathList) {
+            var p = pathList[x];
+            if (point.index == p.index) {
+                isPath = true;
+                break;
+            }
+        }
+        return isPath;
     }
 </script>
 </html>
