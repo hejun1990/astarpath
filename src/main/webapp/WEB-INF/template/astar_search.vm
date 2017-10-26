@@ -18,8 +18,7 @@
     <input type="button" class="setButton" value="重置障碍" onclick="clearHinders()">
     <input type="button" class="setButton" value="开始运算" onclick="starSearch()">
     <input type="button" class="setButton" value="重新开始" onclick="reset()">
-    X : <span id="x_coordinate">0</span>, Y : <span id="y_coordinate">0</span>,
-    F : <span id="f_value">0</span>, G : <span id="g_value">0</span>, H : <span id="h_value">0</span>
+    <input type="button" value="单步执行" onclick="oneStep()">
 </div>
 <div id="path_map" class="center_container">
 </div>
@@ -59,7 +58,7 @@
         var blockHtml = "";
         for (var x = 1; x <= 100; x++) {
             blockHtml += "<div id=\"point_" + x + "\" class=\"point\" index=\"" + x
-                    + "\" onclick=\"clickPoint(this)\" onmouseover=\"overPoint(this)\"></div>";
+                    + "\" onclick=\"clickPoint(this)\"></div>";
 
             // X坐标
             var x_coordinate = (x % 10 != 0) ? (x % 10) : 10;
@@ -201,23 +200,6 @@
         }
     }
 
-    // 鼠标移入方块
-    function overPoint(point) {
-        var cur_point = $(point);
-        var index = cur_point.attr("index");
-        for (var x in pointArray) {
-            var p = pointArray[x];
-            if (p.index == index) {
-                $("#x_coordinate").text(p.x);
-                $("#y_coordinate").text(p.y);
-                $("#f_value").text(p.f);
-                $("#g_value").text(p.g);
-                $("#h_value").text(p.h);
-                break;
-            }
-        }
-    }
-
     // 检查是否可以开始寻路计算
     function checkSearch() {
         if (begin_point == null) {
@@ -327,16 +309,16 @@
 
         var canArriveList = new Array();
         // 查找与当前F值最低方格相邻的方格，只查找上下左右四个方向
+        var up_x = current_lowest_f_point.x;
+        var up_y = current_lowest_f_point.y - 1;
+        var right_x = current_lowest_f_point.x + 1;
+        var right_y = current_lowest_f_point.y;
+        var down_x = current_lowest_f_point.x;
+        var down_y = current_lowest_f_point.y + 1;
+        var left_x = current_lowest_f_point.x - 1;
+        var left_y = current_lowest_f_point.y;
         for (var x in pointArray) {
             var p = pointArray[x];
-            var up_x = current_lowest_f_point.x;
-            var up_y = current_lowest_f_point.y - 1;
-            var right_x = current_lowest_f_point.x + 1;
-            var right_y = current_lowest_f_point.y;
-            var down_x = current_lowest_f_point.x;
-            var down_y = current_lowest_f_point.y + 1;
-            var left_x = current_lowest_f_point.x - 1;
-            var left_y = current_lowest_f_point.y;
             if ((p.x == up_x && p.y == up_y)
                     || (p.x == right_x && p.y == right_y)
                     || (p.x == down_x && p.y == down_y)
@@ -443,6 +425,11 @@
             }
         }
         return isPath;
+    }
+
+    // 单步执行
+    function oneStep() {
+
     }
 </script>
 </html>

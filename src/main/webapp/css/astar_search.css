@@ -1,9 +1,12 @@
 .top_container {
-    margin-bottom: 10px;
+    width: 700px;
+    height: auto;
+    margin: 20px auto;
+    text-align: center;
 }
 
 .center_container {
-    margin: 0 auto;
+    margin: 10px auto;
     width: 700px;
     height: 700px;
     background: #F3F3F3;
