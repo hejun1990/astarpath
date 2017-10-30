@@ -178,23 +178,20 @@ function starSearch() {
         alert("无法找到可抵达终点的路径！");
     } else if (result == 1) {
         if (end_point.parent_point == null) {
-            alert("寻径计算异常！");
+            alert("抱歉，系统出现异常！");
             return;
         }
         getEndPath();
         for (var x in pathList) {
             var p = pathList[x];
             var selected = "div[index='" + p.index + "']";
-            $(selected).removeClass("begin")
-                .removeClass("end")
-                .removeClass("hinder")
-                .addClass("path");
+            $(selected).addClass("path");
             $(selected).append("<span class='span_f'>" + p.f + "</span>")
                 .append("<span class='span_g'>" + p.g + "</span>")
                 .append("<span class='span_h'>" + p.h + "</span>");
         }
 
-        // 显示曾进入开放列表的方块
+        // 显示被探索过的方块
         for (var x in pointArray) {
             var p = pointArray[x];
             var onceOpen = p.is_begin == 0 && p.is_end == 0 && p.parent_point != null && !checkPath(p);
@@ -341,6 +338,7 @@ function reset() {
             .removeClass("hinder")
             .removeClass("path")
             .removeClass("onceOpen")
+            .removeClass("closePath")
             .empty();
     }
     $(":radio[name='pointType'][value='1']").prop("checked", "checked");
@@ -368,13 +366,13 @@ function oneStep() {
 
     if (openList.length == 0) {
         // 没有找到合适的路径
-        alert("计算结束，无法找到可抵达终点的路径！");
+        alert("执行结束，无法找到可抵达终点的路径！");
         return;
     }
     // 检查“开启列表”中是否已经有“终点”了，如果有，寻径计算结束
     var arrive_end = checkExist(end_point, openList);
     if (arrive_end) {
-        alert("计算结束，抵达终点！");
+        alert("执行结束，抵达终点！");
         return;
     }
 
@@ -471,6 +469,7 @@ function oneStep() {
             .removeClass("hinder")
             .removeClass("path")
             .removeClass("onceOpen")
+            .removeClass("closePath")
             .empty();
     }
 
@@ -483,25 +482,35 @@ function oneStep() {
     } while (pathPoint != null && pathPoint.is_begin != 1);
     for (var x in currentPathList) {
         var p = currentPathList[x];
-        if(p.is_begin == 1) {
+        if (p.is_begin == 1) {
             continue;
         }
         var selected = "div[index='" + p.index + "']";
-        $(selected).removeClass("begin")
-            .removeClass("end")
-            .removeClass("hinder")
-            .addClass("path");
+        $(selected).addClass("path");
         $(selected).append("<span class='span_f'>" + p.f + "</span>")
             .append("<span class='span_g'>" + p.g + "</span>")
             .append("<span class='span_h'>" + p.h + "</span>");
     }
 
     // 显示进入“关闭列表”中的方块
+    for (var x in closeList) {
+        var p = closeList[x];
+        if (p.is_begin == 1) {
+            continue;
+        }
+        if (!checkExist(p, currentPathList)) {
+            $("div[index='" + p.index + "']").addClass("closePath")
+                .append("<span class='span_f'>" + p.f + "</span>")
+                .append("<span class='span_g'>" + p.g + "</span>")
+                .append("<span class='span_h'>" + p.h + "</span>");
+        }
+    }
 
-    // 显示曾进入开放列表的方块
+    // 显示被探索过的方块
     for (var x in pointArray) {
         var p = pointArray[x];
-        var onceOpen = p.is_begin == 0 && p.is_end == 0 && p.parent_point != null && !checkExist(p, currentPathList);
+        var onceOpen = p.is_begin == 0 && p.is_end == 0 && p.parent_point != null
+            && !checkExist(p, currentPathList) && !checkExist(p, closeList);
         if (onceOpen) {
             $("div[index='" + p.index + "']").addClass("onceOpen")
                 .append("<span class='span_f onceOpenSpan'>" + p.f + "</span>")

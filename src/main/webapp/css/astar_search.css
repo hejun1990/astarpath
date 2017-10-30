@@ -115,3 +115,65 @@ span {
 .onceOpenSpan {
     color: #2e7d32;
 }
+
+/** 进入“关闭列表”的方块 */
+.closePath {
+    background: slategray;
+}
+
+.explain_container {
+    position: absolute;
+    left: 1180px;
+    top: 64px;
+    width: 200px;
+    height: auto;
+    border: 1px dotted;
+}
+
+.explain_title {
+    margin-left: 10px;
+    margin-top: 10px;
+    font-size: 20px;
+}
+
+.explain_line {
+    margin: 5px 10px 0px 10px;
+    width: 180px;
+    height: 2px;
+    background: black;
+}
+
+.explain_row {
+    margin: 10px 10px 0px 10px;
+    width: 180px;
+    height: 22px;
+}
+
+.explain_row_last {
+    margin: 10px;
+    width: 180px;
+    height: 22px;
+}
+
+.explain_pic {
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    margin-left: 1px;
+    float: left;
+}
+
+.explain_text {
+    margin-left: 10px;
+    margin-top: 1.8px;
+    float: left;
+}
+
+.explain_pic_close {
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    margin-left: 1px;
+    border: 2px solid #2e7d32;
+    float: left;
+}

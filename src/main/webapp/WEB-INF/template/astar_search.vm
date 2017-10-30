@@ -23,5 +23,34 @@
 </div>
 <div id="path_map" class="center_container">
 </div>
+<!-- 说明 -->
+<div class="explain_container">
+    <div class="explain_title">说明</div>
+    <div class="explain_line"></div>
+    <div class="explain_row">
+        <div class="explain_pic begin"></div>
+        <div class="explain_text">起点</div>
+    </div>
+    <div class="explain_row">
+        <div class="explain_pic end"></div>
+        <div class="explain_text">终点</div>
+    </div>
+    <div class="explain_row">
+        <div class="explain_pic hinder"></div>
+        <div class="explain_text">障碍物</div>
+    </div>
+    <div class="explain_row">
+        <div class="explain_pic path"></div>
+        <div class="explain_text">抵达路径</div>
+    </div>
+    <div class="explain_row">
+        <div class="explain_pic_close"></div>
+        <div class="explain_text">探索过的方块</div>
+    </div>
+    <div class="explain_row_last">
+        <div class="explain_pic closePath"></div>
+        <div class="explain_text">关闭的方块</div>
+    </div>
+</div>
 </body>
 </html>
