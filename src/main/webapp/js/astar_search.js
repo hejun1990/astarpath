@@ -32,14 +32,14 @@ var closeList = new Array();
 // 创建一个10*10的方格图
 function initMapBlock() {
     var blockHtml = "";
-    for (var x = 1; x <= 100; x++) {
+    for (var x = 1; x <= 180; x++) {
         blockHtml += "<div id=\"point_" + x + "\" class=\"point\" index=\"" + x
             + "\" onclick=\"clickPoint(this)\"></div>";
 
         // X坐标
-        var x_coordinate = (x % 10 != 0) ? (x % 10) : 10;
+        var x_coordinate = (x % 15 != 0) ? (x % 15) : 15;
         // Y坐标
-        var y_coordinate = (x % 10 != 0) ? Math.ceil(x / 10) : (x / 10);
+        var y_coordinate = (x % 15 != 0) ? Math.ceil(x / 15) : (x / 15);
         // 方块对象
         var point = {
             index: x,

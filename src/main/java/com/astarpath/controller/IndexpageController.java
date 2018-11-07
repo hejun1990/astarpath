@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  */
 @Controller
 public class IndexpageController {
-    @RequestMapping("/astarsearch")
+    @RequestMapping("/index.html")
     public String gotoAStarSearch() {
         return "astar_search";
     }
